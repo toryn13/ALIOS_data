@@ -1,0 +1,57 @@
+---
+title: "ALIOS"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Mouse RNAseq example
+## AKR1D1-/- samples removed
+
+
+```{r}
+counts<-read.csv("male_alios_counts.csv", header = TRUE)
+counts<- data.frame(counts[,-1], row.names=counts[,1])
+male_metadata<-read.csv("male_metadata.csv", header = TRUE)
+y <- DGEList(counts=counts)
+keep<-rowSums(cpm(y) > 0.25) >=2
+y <- y[keep, , keep.lib.sizes=FALSE]
+library(org.Mm.eg.db)
+y$genes$Symbol <- mapIds(org.Mm.eg.db, rownames(y), keytype="ENTREZID", column="SYMBOL")
+
+group<-factor(male_metadata$diet)
+mouse_number<-seq(1:15)
+design<-model.matrix(~0+group)
+colnames(design)<-levels(group)
+pch <- c(0,1)
+colors <- rep(c("black", "red"), 2)
+plotMDS(y, col=colors[group], pch=pch[group])
+legend("topleft", legend=levels(group), pch=pch, col=colors, ncol=2)
+y <- calcNormFactors(y)
+y <- estimateDisp(y,design)
+con.matrix<-makeContrasts(WT_diet=ALIOS-NC,levels=design)
+fit <- glmFit(y,design)
+lrtWT_diet <- glmLRT(fit,contrast=con.matrix[,"WT_diet"])
+is.deWT_diet<- decideTestsDGE(lrtWT_diet)
+summary(is.deWT_diet)
+
+```
+
+
+```{r}
+t<-data.frame(topTags(lrtWT_diet,n=Inf))
+write.csv(t, "maleWT_NCvsALIOS.csv")
+```
+
+
+```{r}
+logCPM <- cpm(y, prior.count=2, log=TRUE)
+rownames(logCPM) <- y$genes$Symbol 
+mouse<-paste0(group,".",mouse_number)
+colnames(logCPM) <- mouse
+```
+```{r}
+write.csv(logCPM, "counts_Male_norm.csv")
+```
+
