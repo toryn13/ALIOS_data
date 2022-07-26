@@ -1,1 +1,1 @@
-# ALIOS_data
+# Data for "The American lifestyle-induced obesity syndrome diet in male and female rodents recapitulates the clinical and transcriptomic features of nonalcoholic fatty liver disease and nonalcoholic steatohepatitis" https://pubmed.ncbi.nlm.nih.gov/32755310/ 
